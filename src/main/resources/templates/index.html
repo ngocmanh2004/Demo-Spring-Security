@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spring Security Demo - Trang chủ</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            padding: 60px 40px;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            text-align: center;
+            max-width: 600px;
+            width: 100%;
+        }
+
+        h1 {
+            font-size: 36px;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            font-size: 18px;
+            color: #666;
+            margin-bottom: 40px;
+        }
+
+        .features {
+            text-align: left;
+            margin: 40px 0;
+            padding: 30px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+
+        .features h3 {
+            color: #667eea;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .feature-item {
+            margin: 15px 0;
+            padding-left: 30px;
+            position: relative;
+        }
+
+        .feature-item:before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: #27ae60;
+            font-weight: bold;
+            font-size: 20px;
+        }
+
+        .buttons {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-top: 30px;
+        }
+
+        .btn {
+            padding: 15px 40px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: white;
+            color: #667eea;
+            border: 2px solid #667eea;
+        }
+
+        .btn-secondary:hover {
+            background: #667eea;
+            color: white;
+        }
+
+        .info {
+            margin-top: 40px;
+            padding: 20px;
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            border-radius: 5px;
+            text-align: left;
+        }
+
+        .info h4 {
+            color: #856404;
+            margin-bottom: 10px;
+        }
+
+        .info p {
+            color: #856404;
+            line-height: 1.6;
+            margin: 5px 0;
+        }
+
+        .status {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 8px;
+            display: none;
+        }
+
+        .logged-in {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .logged-out {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>🛡️ Spring Security Demo</h1>
+    <p class="subtitle">Hệ thống quản lý sản phẩm với JWT Authentication</p>
+
+    <div id="status" class="status"></div>
+
+    <div class="features">
+        <h3>Tính năng</h3>
+        <div class="feature-item">JWT Authentication (Access Token + Refresh Token)</div>
+        <div class="feature-item">Phân quyền User và Admin</div>
+        <div class="feature-item">CRUD sản phẩm (Admin only)</div>
+        <div class="feature-item">Xem danh sách sản phẩm (All users)</div>
+        <div class="feature-item">Bảo mật với BCrypt password</div>
+        <div class="feature-item">RESTful API</div>
+    </div>
+
+    <div class="buttons" id="authButtons">
+        <a href="login.html" class="btn btn-primary">Đăng nhập</a>
+        <a href="register.html" class="btn btn-secondary">Đăng ký</a>
+    </div>
+
+    <div class="buttons" id="userButtons" style="display: none;">
+        <a href="products.html" class="btn btn-primary">Xem sản phẩm</a>
+        <a href="admin.html" class="btn btn-primary" id="adminBtn" style="display: none;">Quản lý (Admin)</a>
+        <button class="btn btn-secondary" onclick="logout()">Đăng xuất</button>
+    </div>
+
+    <div class="info">
+        <h4>📝 Tài khoản demo:</h4>
+        <p><strong>Admin:</strong> admin / 123456</p>
+        <p><strong>User:</strong> user1 / 123456</p>
+    </div>
+</div>
+
+<script>
+    // Check if user is logged in
+    function checkAuth() {
+        const token = localStorage.getItem('accessToken');
+        const username = localStorage.getItem('username');
+        const roles = JSON.parse(localStorage.getItem('roles') || '[]');
+
+        const statusDiv = document.getElementById('status');
+        const authButtons = document.getElementById('authButtons');
+        const userButtons = document.getElementById('userButtons');
+        const adminBtn = document.getElementById('adminBtn');
+
+        if (token && username) {
+            statusDiv.className = 'status logged-in';
+            statusDiv.style.display = 'block';
+            statusDiv.innerHTML = `👤 Xin chào, <strong>${username}</strong>! Bạn đang đăng nhập.`;
+
+            authButtons.style.display = 'none';
+            userButtons.style.display = 'flex';
+
+            if (roles.includes('ROLE_ADMIN')) {
+                adminBtn.style.display = 'inline-block';
+            }
+        } else {
+            statusDiv.className = 'status logged-out';
+            statusDiv.style.display = 'block';
+            statusDiv.textContent = 'Bạn chưa đăng nhập. Vui lòng đăng nhập để tiếp tục.';
+
+            authButtons.style.display = 'flex';
+            userButtons.style.display = 'none';
+        }
+    }
+
+    function logout() {
+        if (confirm('Bạn có chắc muốn đăng xuất?')) {
+            localStorage.clear();
+            window.location.reload();
+        }
+    }
+
+    // Check auth status on page load
+    checkAuth();
+</script>
+</body>
+</html>
